@@ -1,0 +1,150 @@
+{{/*
+Template: project/run_cmd_service.go
+Description: Run command for long-running service/daemon (no HTTP framework for main logic)
+Variables:
+  - Year: string - Copyright year
+  - Author: string - Author name
+  - ProjectName: string - Project name
+  - ModuleName: string - Go module name
+*/}}
+/*
+Copyright © {{.Year}} {{.Author}}
+*/
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"{{.ModuleName}}/pkg/logger"
+	"{{.ModuleName}}/internal/core/services"
+{{- if .WithObservability}}
+	"{{.ModuleName}}/internal/observability"
+{{- end}}
+	"github.com/spf13/cobra"
+)
+
+// runCmd represents the run command
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Start the {{.ProjectName}} service",
+	Long:  `Start the {{.ProjectName}} service and run until stopped.
+
+The service will run continuously processing events, messages, or performing
+scheduled tasks. It listens for SIGINT (Ctrl+C) and SIGTERM signals
+and performs a graceful shutdown with a configurable timeout.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg := GetConfig()
+		
+		// Initialize logger from config
+		log := logger.New(&logger.Config{
+			Level:  cfg.LogLevel,
+			Format: cfg.LogFormat,
+		})
+
+		log.Info("Starting {{.ProjectName}} service...")
+
+{{- if .WithObservability}}
+		// Start observability server (health checks + metrics) if enabled
+		enableObservability, _ := cmd.Flags().GetBool("observability")
+		var shutdownObservability func()
+		var metrics *observability.PrometheusMetrics
+
+		if enableObservability {
+			healthChecker := observability.NewHealthChecker()
+			metrics = observability.NewPrometheusMetrics()
+
+			// Register health checks for your components here
+			// Example:
+			// healthChecker.RegisterCheck("database", func(ctx context.Context) observability.ComponentHealth {
+			//     // Check database connection
+			//     return observability.ComponentHealth{
+			//         Status:  observability.StatusHealthy,
+			//         Message: "Database connected",
+			//     }
+			// })
+
+			obsAddr, _ := cmd.Flags().GetString("observability-addr")
+			obsServer := observability.NewServer(obsAddr, healthChecker, metrics)
+			shutdownObservability = obsServer.StartInBackground(log)
+			defer shutdownObservability()
+		}
+{{- end}}
+
+		// Create your service/processor
+		// This is the main business logic that runs continuously
+		processor, err := services.NewProcessor(&services.ProcessorConfig{
+			Config: cfg,
+			Logger: log,
+			{{if .WithObservability}}Metrics: metrics,{{end}}
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create processor: %w", err)
+		}
+		defer processor.Close()
+
+		// Configure context with cancellation for graceful shutdown
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Channel to capture OS signals
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+		// Channel for processor errors
+		errChan := make(chan error, 1)
+
+		// Start processor in goroutine
+		// This is where your main business logic runs
+		go func() {
+			log.Info("Processor started")
+			if err := processor.Start(ctx); err != nil {
+				errChan <- err
+			}
+		}()
+
+		// Wait for signal or error
+		select {
+		case sig := <-sigChan:
+			log.Info("Received signal %v, initiating graceful shutdown...", sig)
+			cancel()
+
+			// Give time for processor to close gracefully
+			shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer shutdownCancel()
+
+			done := make(chan struct{})
+			go func() {
+				processor.Close()
+				close(done)
+			}()
+
+			select {
+			case <-done:
+				log.Info("Service stopped gracefully")
+			case <-shutdownCtx.Done():
+				log.Warn("Shutdown timeout, forcing exit")
+			}
+
+			return nil
+
+		case err := <-errChan:
+			cancel()
+			return fmt.Errorf("processor error: %w", err)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(runCmd)
+
+{{- if .WithObservability}}
+	// Observability flags
+	runCmd.Flags().Bool("observability", false, "Enable observability server (health + metrics)")
+	runCmd.Flags().String("observability-addr", ":8080", "Observability server address")
+{{- end}}
+}

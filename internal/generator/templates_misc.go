@@ -60,6 +60,7 @@ func (g *ProjectGenerator) generateDockerFiles(projectPath string) error {
 
 // generateObservability generates observability files
 func (g *ProjectGenerator) generateObservability(projectPath string) error {
+	// Generate health.go
 	healthContent, err := globalTemplateLoader.Render("misc/health.go.tmpl", nil)
 	if err != nil {
 		return fmt.Errorf("failed to render health template: %w", err)
@@ -69,10 +70,21 @@ func (g *ProjectGenerator) generateObservability(projectPath string) error {
 		return err
 	}
 
+	// Generate metrics.go
 	metricsContent, err := globalTemplateLoader.Render("misc/metrics.go.tmpl", nil)
 	if err != nil {
 		return fmt.Errorf("failed to render metrics template: %w", err)
 	}
 
-	return fileutil.WriteFile(filepath.Join(projectPath, "internal", "observability", "metrics.go"), metricsContent)
+	if err := fileutil.WriteFile(filepath.Join(projectPath, "internal", "observability", "metrics.go"), metricsContent); err != nil {
+		return err
+	}
+
+	// Generate server.go
+	serverContent, err := globalTemplateLoader.Render("misc/server.go.tmpl", nil)
+	if err != nil {
+		return fmt.Errorf("failed to render server template: %w", err)
+	}
+
+	return fileutil.WriteFile(filepath.Join(projectPath, "internal", "observability", "server.go"), serverContent)
 }

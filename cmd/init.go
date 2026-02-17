@@ -14,6 +14,7 @@ import (
 
 var (
 	moduleName       string
+	projectType      string
 	framework        string
 	adapterStyle     string
 	coreLogic        string
@@ -43,10 +44,13 @@ Architecture (Ports & Adapters) pattern, including:
   - Makefile with common tasks
   - README with architecture documentation
 
+Project Types:
+  http-server  - HTTP API server with web framework
+  service      - Long-running daemon/service (no web framework for main logic)
+
 Example:
-  hexago init my-app --module github.com/user/my-app
-  hexago init blog-api --module github.com/user/blog-api --framework echo
-  hexago init iot-service --adapter-style driver-driven --core-logic usecases`,
+  hexago init my-api --module github.com/user/my-api --project-type http-server --framework echo
+  hexago init my-service --module github.com/user/my-service --project-type service`,
 	Args: cobra.ExactArgs(1),
 	RunE: runInit,
 }
@@ -57,8 +61,9 @@ func init() {
 	// Required flags
 	initCmd.Flags().StringVarP(&moduleName, "module", "m", "", "Go module name (e.g., github.com/user/my-app)")
 
-	// Framework and architecture choices
-	initCmd.Flags().StringVarP(&framework, "framework", "f", "stdlib", "Web framework (echo|gin|chi|fiber|stdlib)")
+	// Project type and architecture choices
+	initCmd.Flags().StringVarP(&projectType, "project-type", "t", "http-server", "Project type (http-server|service)")
+	initCmd.Flags().StringVarP(&framework, "framework", "f", "stdlib", "Web framework for http-server (echo|gin|chi|fiber|stdlib)")
 	initCmd.Flags().StringVar(&adapterStyle, "adapter-style", "primary-secondary", "Adapter naming style (primary-secondary|driver-driven)")
 	initCmd.Flags().StringVar(&coreLogic, "core-logic", "services", "Core business logic directory name (services|usecases)")
 
@@ -91,9 +96,19 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Validate framework
-	if err := validateFramework(framework); err != nil {
+	// Validate project type
+	if err := validateProjectType(projectType); err != nil {
 		return err
+	}
+
+	// Validate framework (only required for http-server)
+	if projectType == "http-server" {
+		if err := validateFramework(framework); err != nil {
+			return err
+		}
+	} else if framework != "stdlib" {
+		// Warn if framework specified for non-http-server projects
+		fmt.Printf("⚠️  Warning: --framework is ignored for project type '%s' (only used for http-server)\n", projectType)
 	}
 
 	// Validate adapter style
@@ -108,6 +123,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Create project configuration
 	config := generator.NewProjectConfig(projectName, moduleName)
+	config.ProjectType = projectType
 	config.Framework = framework
 	config.AdapterStyle = adapterStyle
 	config.CoreLogic = coreLogic
@@ -157,6 +173,19 @@ func validateModuleName(name string) error {
 	// Basic validation - could be more strict
 	if !strings.Contains(name, "/") && !strings.Contains(name, ".") {
 		fmt.Printf("⚠️  Warning: module name '%s' doesn't follow Go module naming convention (domain.com/user/project)\n", name)
+	}
+
+	return nil
+}
+
+func validateProjectType(pt string) error {
+	validTypes := map[string]bool{
+		"http-server": true,
+		"service":     true,
+	}
+
+	if !validTypes[pt] {
+		return fmt.Errorf("invalid project type '%s'. Valid options: http-server, service", pt)
 	}
 
 	return nil
@@ -221,7 +250,10 @@ func printProjectInfo(config *generator.ProjectConfig) {
 	fmt.Println("\n📋 Project Configuration:")
 	fmt.Printf("  Name:              %s\n", config.ProjectName)
 	fmt.Printf("  Module:            %s\n", config.ModuleName)
-	fmt.Printf("  Framework:         %s\n", config.Framework)
+	fmt.Printf("  Project Type:      %s\n", config.ProjectType)
+	if config.IsHTTPServer() {
+		fmt.Printf("  Framework:         %s\n", config.Framework)
+	}
 	fmt.Printf("  Adapter Style:     %s\n", config.AdapterStyle)
 	fmt.Printf("  Core Logic:        %s\n", config.CoreLogic)
 	fmt.Printf("  Docker:            %v\n", config.WithDocker)

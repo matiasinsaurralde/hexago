@@ -36,14 +36,43 @@ func (g *ProjectGenerator) generateRootCommand(projectPath string) error {
 	return fileutil.WriteFile(filepath.Join(projectPath, "cmd", "root.go"), content)
 }
 
-// generateRunCommand generates cmd/run.go
+// generateRunCommand generates cmd/run.go using the appropriate template for project type
 func (g *ProjectGenerator) generateRunCommand(projectPath string) error {
-	content, err := globalTemplateLoader.Render("project/run_cmd.go.tmpl", g.config)
+	// Select template based on project type
+	var templateName string
+	switch g.config.ProjectType {
+	case "http-server":
+		templateName = "project/run_cmd_http_server.go.tmpl"
+	case "service":
+		templateName = "project/run_cmd_service.go.tmpl"
+		// Also generate processor for service type
+		if err := g.generateProcessor(projectPath); err != nil {
+			return fmt.Errorf("failed to generate processor: %w", err)
+		}
+	default:
+		// Fallback to http-server for backward compatibility
+		templateName = "project/run_cmd.go.tmpl"
+	}
+
+	content, err := globalTemplateLoader.Render(templateName, g.config)
 	if err != nil {
-		return fmt.Errorf("failed to render run_cmd.go template: %w", err)
+		return fmt.Errorf("failed to render %s template: %w", templateName, err)
 	}
 
 	return fileutil.WriteFile(filepath.Join(projectPath, "cmd", "run.go"), content)
+}
+
+// generateProcessor generates internal/core/services/processor.go for service type
+func (g *ProjectGenerator) generateProcessor(projectPath string) error {
+	content, err := globalTemplateLoader.Render("service/processor.go.tmpl", g.config)
+	if err != nil {
+		return fmt.Errorf("failed to render processor.go template: %w", err)
+	}
+
+	return fileutil.WriteFile(
+		filepath.Join(projectPath, "internal", "core", g.config.CoreLogicDir(), "processor.go"),
+		content,
+	)
 }
 
 // generateConfig generates internal/config/config.go

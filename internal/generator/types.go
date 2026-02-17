@@ -9,8 +9,9 @@ type ProjectConfig struct {
 	ModuleName  string // e.g., "github.com/user/my-app"
 	OutputDir   string // Where to create the project
 
-	// Framework and architecture choices
-	Framework    string // "echo", "gin", "chi", "fiber", "stdlib"
+	// Project type and architecture choices
+	ProjectType  string // "http-server", "service", "job", "cli"
+	Framework    string // "echo", "gin", "chi", "fiber", "stdlib" (only for http-server)
 	AdapterStyle string // "primary-secondary" or "driver-driven"
 	CoreLogic    string // "services" or "usecases"
 
@@ -35,6 +36,7 @@ func NewProjectConfig(projectName, moduleName string) *ProjectConfig {
 		ProjectName:       projectName,
 		ModuleName:        moduleName,
 		OutputDir:         ".",
+		ProjectType:       "http-server", // Default for backward compatibility
 		Framework:         "stdlib",
 		AdapterStyle:      "primary-secondary",
 		CoreLogic:         "services",
@@ -70,4 +72,19 @@ func (c *ProjectConfig) AdapterOutboundDir() string {
 // CoreLogicDir returns the directory name for business logic
 func (c *ProjectConfig) CoreLogicDir() string {
 	return c.CoreLogic
+}
+
+// IsHTTPServer returns true if project is an HTTP API server
+func (c *ProjectConfig) IsHTTPServer() bool {
+	return c.ProjectType == "http-server"
+}
+
+// IsService returns true if project is a long-running service/daemon
+func (c *ProjectConfig) IsService() bool {
+	return c.ProjectType == "service"
+}
+
+// NeedsWebFramework returns true if project needs a web framework for main logic
+func (c *ProjectConfig) NeedsWebFramework() bool {
+	return c.IsHTTPServer()
 }
