@@ -90,10 +90,12 @@ release:
 
     All types support optional observability (health checks + Prometheus metrics).
 
-# Homebrew tap configuration (GoReleaser v2 format)
+# Homebrew configuration (GoReleaser v2 format)
 # To publish to Homebrew, create a tap repository at github.com/padiazg/homebrew-tap
-brews:
+homebrew_casks:
   - name: hexago
+    binaries:
+      - hexago
     repository:
       owner: padiazg
       name: homebrew-tap
@@ -105,9 +107,4 @@ brews:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
-    folder: Formula
-    test: |
-      system "#{bin}/hexago", "version"
-    install: |
-      bin.install "hexago"
+    commit_msg_template: "Cask update for {{ .ProjectName }} version {{ .Tag }}"
