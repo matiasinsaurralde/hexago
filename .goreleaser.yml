@@ -27,17 +27,7 @@ builds:
       - -X github.com/padiazg/hexago/cmd.date={{.Date}}
 
 archives:
-  - format: tar.gz
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    format_overrides:
-      - goos: windows
-        format: zip
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - README.md
       - LICENSE*
@@ -45,9 +35,6 @@ archives:
 
 checksum:
   name_template: 'checksums.txt'
-
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
@@ -103,13 +90,24 @@ release:
 
     All types support optional observability (health checks + Prometheus metrics).
 
-# Homebrew tap (optional - uncomment if you want to publish to homebrew)
+# Homebrew tap configuration (GoReleaser v2 format)
+# To publish to Homebrew, create a tap repository at github.com/padiazg/homebrew-tap
 brews:
-  - repository:
+  - name: hexago
+    repository:
       owner: padiazg
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     homepage: https://github.com/padiazg/hexago
     description: Hexagonal Architecture scaffolding tool for Go
     license: MIT
+    skip_upload: auto
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    folder: Formula
+    test: |
+      system "#{bin}/hexago", "version"
     install: |
       bin.install "hexago"
