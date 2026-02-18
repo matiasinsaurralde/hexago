@@ -72,10 +72,17 @@ release:
 
     ### Installation
 
-    Download the appropriate binary for your platform below, or use:
+    Download the appropriate binary for your platform below, or:
 
-    ```bash
+    use Go
+    ```shell
     go install github.com/padiazg/hexago@{{ .Tag }}
+    ```
+    
+    use Homebrew
+    ```shell
+    brew tap padiazg/hexago 
+    brew install hexago
     ```
 
   footer: |
