@@ -35,13 +35,19 @@ HexaGo is an opinionated CLI tool that generates scaffolding for Go applications
 - 🔄 **Multi-Source Loading** - Project-local, user-global, or embedded templates
 
 ## Installation
-
-```bash
+Using Go
+```shell
 go install github.com/padiazg/hexago@latest
 ```
 
+Using Homebrew
+```shell
+brew tap padiazg/hexago 
+brew install hexago
+```
+
 Or build from source:
-```bash
+```shell
 git clone https://github.com/padiazg/hexago.git
 cd hexago
 go build -o hexago
@@ -51,7 +57,7 @@ go build -o hexago
 
 ### 1. Create a New Project
 
-```bash
+```shell
 # Basic project with stdlib
 hexago init my-app --module github.com/user/my-app
 
@@ -66,7 +72,7 @@ hexago init service --module github.com/company/service \
 
 ### 2. Add Components
 
-```bash
+```shell
 cd my-app
 
 # Add domain entities
@@ -88,7 +94,7 @@ hexago add adapter primary http ProductHandler
 
 ### 3. Run Your Application
 
-```bash
+```shell
 # Build
 go build
 
@@ -134,7 +140,7 @@ my-app/
 
 ### Initialize Project
 
-```bash
+```shell
 hexago init <name> [flags]
 
 Flags:
@@ -153,7 +159,7 @@ Flags:
 
 ### Add Service
 
-```bash
+```shell
 hexago add service <name> [--description "desc"]
 
 Examples:
@@ -163,7 +169,7 @@ Examples:
 
 ### Add Domain Entity
 
-```bash
+```shell
 hexago add domain entity <name> [--fields "field:type,field:type"]
 
 Examples:
@@ -173,7 +179,7 @@ Examples:
 
 ### Add Domain Value Object
 
-```bash
+```shell
 hexago add domain valueobject <name> [--fields "field:type"]
 
 Examples:
@@ -183,7 +189,7 @@ Examples:
 
 ### Add Primary Adapter
 
-```bash
+```shell
 hexago add adapter primary <type> <name>
 
 Types: http, grpc, queue
@@ -196,7 +202,7 @@ Examples:
 
 ### Add Secondary Adapter
 
-```bash
+```shell
 hexago add adapter secondary <type> <name>
 
 Types: database, external, cache
@@ -209,7 +215,7 @@ Examples:
 
 ### Add Worker
 
-```bash
+```shell
 hexago add worker <name> [flags]
 
 Flags:
@@ -226,7 +232,7 @@ Examples:
 
 ### Add Migration
 
-```bash
+```shell
 hexago add migration <name>
 
 Examples:
@@ -237,7 +243,7 @@ Examples:
 
 ### Add Infrastructure Tool
 
-```bash
+```shell
 hexago add tool <type> <name> [--description "desc"]
 
 Types: logger, validator, mapper, middleware
@@ -251,7 +257,7 @@ Examples:
 
 ### Validate Architecture
 
-```bash
+```shell
 hexago validate
 
 Checks:
@@ -264,7 +270,7 @@ Checks:
 
 ## Complete Example
 
-```bash
+```shell
 # 1. Create project
 hexago init blog-api --module github.com/me/blog-api --framework gin
 
@@ -358,7 +364,7 @@ logformat: json
 ```
 
 Or use environment variables:
-```bash
+```shell
 export MY_APP_SERVER_PORT=8080
 export MY_APP_LOGLEVEL=debug
 ```
@@ -367,7 +373,7 @@ export MY_APP_LOGLEVEL=debug
 
 Generated projects include a Makefile:
 
-```bash
+```shell
 make build           # Build the application
 make run             # Run the application
 make test            # Run tests
@@ -463,7 +469,7 @@ Ensure `go.mod` exists and contains a valid module declaration.
 
 ### Port already in use
 Change port in config file or environment:
-```bash
+```shell
 export MY_APP_SERVER_PORT=9000
 ```
 
