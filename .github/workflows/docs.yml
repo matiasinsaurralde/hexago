@@ -28,12 +28,12 @@ jobs:
 
       - name: Build docs
         run: mkdocs build
-        working-directory: '.doc'
+        working-directory: 'doc'
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './doc/site'
+          path: 'doc/site'
 
   deploy:
     environment:
