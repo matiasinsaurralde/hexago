@@ -26,14 +26,13 @@ jobs:
         run: pip install mkdocs-material pymdown-extensions
 
       - name: Build docs
-        working-directory: doc
         run: mkdocs build --site-dir ./site
+        working-directory: doc
 
       - name: Upload artifact
-        working-directory: doc
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./site
+          path: ./doc/site
 
   deploy:
     environment:
