@@ -9,6 +9,8 @@ import (
 	"github.com/padiazg/hexago/pkg/fileutil"
 )
 
+var migrationUpFilePattern = regexp.MustCompile(`^(\d{6})_.*\.up\.sql$`)
+
 // MigrationGenerator generates database migration files
 type MigrationGenerator struct {
 	config *ProjectConfig
@@ -73,9 +75,6 @@ func (g *MigrationGenerator) Generate(migrationName string) (int, error) {
 
 // getNextMigrationNumber finds the next sequential migration number
 func (g *MigrationGenerator) getNextMigrationNumber(migrationsDir string) (int, error) {
-	// Pattern to match migration files: NNNNNN_name.up.sql
-	pattern := regexp.MustCompile(`^(\d{6})_.*\.up\.sql$`)
-
 	maxNumber := 0
 
 	// Read directory
@@ -87,7 +86,7 @@ func (g *MigrationGenerator) getNextMigrationNumber(migrationsDir string) (int, 
 
 	// Find highest number
 	for _, entry := range entries {
-		if matches := pattern.FindStringSubmatch(entry); len(matches) > 1 {
+		if matches := migrationUpFilePattern.FindStringSubmatch(entry); len(matches) > 1 {
 			num, err := strconv.Atoi(matches[1])
 			if err == nil && num > maxNumber {
 				maxNumber = num
