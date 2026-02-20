@@ -93,3 +93,6 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/padiazg/hexago
+  analytics:
+    provider: google
+    property: !ENV ANALYTICS_ID

@@ -41,6 +41,8 @@ jobs:
       - name: Build docs
         run: mkdocs build
         working-directory: 'doc'
+        env:
+          ANALYTICS_ID:  ${{ secrets.ANALYTICS_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
