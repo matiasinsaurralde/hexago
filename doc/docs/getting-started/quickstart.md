@@ -125,13 +125,13 @@ Open the generated files — they contain `// TODO` comments to guide you:
 
 ```shell
 # Business logic
-vim internal/core/services/create_user.go
+nano internal/core/services/create_user.go
 
 # HTTP handler
-vim internal/adapters/primary/http/user_handler.go
+nano internal/adapters/primary/http/user_handler.go
 
 # Repository
-vim internal/adapters/secondary/database/user_repository.go
+nano internal/adapters/secondary/database/user_repository.go
 ```
 
 ---

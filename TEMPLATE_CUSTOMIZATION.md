@@ -72,7 +72,7 @@ hexago templates export project/main.go.tmpl
 hexago templates export project/main.go.tmpl --global
 
 # Edit the exported template
-vim .hexago/templates/project/main.go.tmpl
+nano .hexago/templates/project/main.go.tmpl
 
 # Generate code - will use your custom template
 hexago init my-app --module github.com/me/my-app

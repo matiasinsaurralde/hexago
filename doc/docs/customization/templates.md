@@ -160,7 +160,7 @@ hexago templates reset project/main.go.tmpl --global
 hexago templates export service/service.go.tmpl
 
 # Edit the exported file
-vim .hexago/templates/service/service.go.tmpl
+nano .hexago/templates/service/service.go.tmpl
 
 # Generate code — will use your custom template
 hexago add service CreateUser
@@ -371,7 +371,7 @@ For user-wide templates (affect all your projects):
 
 ```shell
 hexago templates export service/service.go.tmpl --global
-vim ~/.hexago/templates/service/service.go.tmpl
+nano ~/.hexago/templates/service/service.go.tmpl
 ```
 
 For team sharing, you can distribute templates as a tarball or a Git submodule:
