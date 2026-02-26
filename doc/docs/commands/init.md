@@ -143,15 +143,53 @@ my-app/
 │   ├── adapters/
 │   │   ├── primary/
 │   │   │   └── http/
+│   │   │       └── server.go  # Framework-specific lifecycle
 │   │   └── secondary/
 │   │       └── database/
 │   ├── config/
 │   └── observability/     # (with --with-observability)
 ├── pkg/
-│   └── logger/
+│   ├── logger/
+│   └── server/
+│       └── server.go      # Shared Server interface
 ├── main.go
 ├── Makefile
 ├── Dockerfile             # (with --with-docker)
 ├── compose.yaml           # (with --with-docker)
+├── .hexago.yaml           # HexaGo project configuration
 └── README.md
 ```
+
+---
+
+## Project Configuration File (`.hexago.yaml`)
+
+After scaffolding, `hexago init` writes a `.hexago.yaml` file into the project root. This file persists all settings chosen at init time — framework, adapter style, feature flags, etc.
+
+```yaml
+# .hexago.yaml (example)
+project:
+  name: my-app
+  module: github.com/user/my-app
+  type: http-server
+  framework: echo
+structure:
+  adapter_style: primary-secondary
+  core_logic: services
+  explicit_ports: false
+features:
+  docker: false
+  observability: false
+  migrations: false
+  workers: false
+```
+
+All `hexago add *` commands read this file automatically — you do not need to pass framework or convention flags on every invocation.
+
+The file also acts as a **defaults layer** when running `hexago init` in a directory that already contains one:
+
+```
+flag value  >  .hexago.yaml  >  hardcoded defaults
+```
+
+This makes it easy to keep a personal or team-wide preferences file without forcing every flag on every invocation.

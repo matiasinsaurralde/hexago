@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.2] — 2026-02-26
+
+!!! success "Release Highlights"
+    Template management commands, project config file, and cleaner generated HTTP server architecture.
+
+### Template Management (`hexago templates`)
+
+Full control over the templates HexaGo uses to generate your projects:
+
+- **`hexago templates list`** — Lists all built-in templates grouped by directory. Templates with an active override are annotated with `← project-local` or `← user-global`.
+- **`hexago templates which <name>`** — Shows which source wins for a given template (embedded, project-local, user-global, or binary-local) with its full path.
+- **`hexago templates export <name> [--global]`** — Copies a built-in template to `.hexago/templates/<name>` (project-local) or `~/.hexago/templates/<name>` (user-global) for customization.
+- **`hexago templates export-all [--global] [--force]`** — Bulk-exports every embedded template at once; skips templates that already have an override unless `--force` is passed.
+- **`hexago templates validate <path>`** — Parses a template file and reports `text/template` syntax errors. Prints `✓` on success, `✗ <error>` on failure.
+- **`hexago templates reset <name> [--global]`** — Removes a custom override, reverting to the next-priority source.
+
+See [Template Customization](customization/templates.md) for full details.
+
+### `.hexago.yaml` Project Configuration File
+
+- **`hexago init` now writes `.hexago.yaml`** into the generated project root after scaffolding, persisting all init-time settings (framework, adapter style, features, etc.).
+- **`hexago add *` reads `.hexago.yaml` automatically** — no need to repeat flags on every invocation. Settings detected from the config file supplement filesystem heuristics.
+- **Acts as a defaults layer** — priority is `flags > .hexago.yaml > hardcoded defaults`. Any flag not explicitly passed is filled from `.hexago.yaml`, enabling personal or team-wide preferences.
+- Useful for sharing consistent conventions across a team without enforcing every flag.
+
+### HTTP Server Architecture (Generated Code)
+
+- **Shared `Server` interface** in `pkg/server/server.go` — a single `Run(errChan chan<- error)` / `Stop(ctx context.Context) error` contract shared across all adapters.
+- **Framework-specific `server.go`** extracted into `internal/adapters/{primary|driver}/http/server.go` for all five supported frameworks (Echo, Gin, Chi, Fiber, stdlib). Each adapter's `New()` constructor returns the shared `srv.Server` interface, hiding all framework types behind the abstraction boundary.
+- **Thin `cmd/run.go` orchestrator** — now completely framework-agnostic: no framework imports, no repeated signal/shutdown boilerplate. Just calls `httpserver.New()`, `srv.Run()`, and `srv.Stop()`.
+- **Compile-time interface guards** (`var _ srv.Server = (*server)(nil)`) catch implementation drift at build time.
+
+### Refactored (Internal — No Generated-Code Change)
+
+- **Removed global template loader singleton** — `TemplateLoader` is now a field on `ProjectConfig`, scoping it to its owning config and making generators straightforward to test in isolation.
+- **New `pkg/utils` package** — `ToSnakeCase` and `ToTitleCase` helpers replace multiple identical local copies across the generator.
+- **Observability templates moved** — `misc/health.go.tmpl`, `misc/metrics.go.tmpl`, and `misc/server.go.tmpl` relocated to `observability/` to match the generated `internal/observability/` package structure.
+- **Extended `pkg/fileutil`** — `HomeDir()` and `BinaryDir()` migrated from the generator package into `pkg/fileutil`, removing private helpers from the generator.
+
+---
+
 ## [0.0.1] — 2026-02-17
 
 !!! success "MVP Release"
@@ -137,9 +178,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## How to Update
 
 ```shell
-go install github.com/padiazg/hexago@v0.0.1
+go install github.com/padiazg/hexago@v0.0.2
 ```
 
-Or download binaries from [GitHub Releases](https://github.com/padiazg/hexago/releases/tag/v0.0.1).
+Or download binaries from [GitHub Releases](https://github.com/padiazg/hexago/releases/tag/v0.0.2).
 
+[0.0.2]: https://github.com/padiazg/hexago/releases/tag/v0.0.2
 [0.0.1]: https://github.com/padiazg/hexago/releases/tag/v0.0.1

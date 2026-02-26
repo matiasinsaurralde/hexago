@@ -59,21 +59,26 @@ Visit [http://localhost:8080/health](http://localhost:8080/health) — you shoul
 my-app/
 ├── cmd/                    # Cobra commands
 │   ├── root.go            # Root command + config
-│   └── run.go             # Server with graceful shutdown
+│   └── run.go             # Framework-agnostic orchestrator
 ├── internal/
 │   ├── core/              # CORE — No external dependencies
 │   │   ├── domain/        # Domain entities
 │   │   └── services/      # Business logic
 │   ├── adapters/          # ADAPTERS — External interfaces
 │   │   ├── primary/       # Inbound (HTTP, gRPC)
+│   │   │   └── http/
+│   │   │       └── server.go  # Framework-specific lifecycle
 │   │   └── secondary/     # Outbound (DB, APIs)
 │   └── config/            # Configuration
 ├── pkg/
-│   └── logger/            # Reusable logger package
+│   ├── logger/            # Reusable logger package
+│   └── server/
+│       └── server.go      # Shared Server interface
 ├── main.go                # Minimal entry point
 ├── Makefile               # Common tasks
 ├── Dockerfile             # Multi-stage build
-└── compose.yaml           # Docker Compose
+├── compose.yaml           # Docker Compose
+└── .hexago.yaml           # HexaGo project config (auto-generated)
 ```
 
 ---
